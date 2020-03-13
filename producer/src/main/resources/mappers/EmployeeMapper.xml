@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.EmployeeMapper">
+
+    <cache/>
+    <resultMap id="employeesResultMap" type="Employee">
+        <id property = "employeeNo" column="emp_no"/>
+        <result property = "birthDate" column="birth_date"/>
+        <result property = "firstName" column="first_name"/>
+        <result property = "lastName" column="last_name"/>
+        <result property = "gender" column="gender"/>
+        <result property = "hireDate" column="hire_date"/>
+    </resultMap>
+
+
+    <insert id="insert" parameterType="org.example.model.Employee">
+        insert into employees(emp_no, birth_date, first_name, last_name, gender, hire_date)
+        values (#{employeeNo}, #{birthDate}, #{firstName}, #{lastName}, #{gender}, #{hireDate})
+    </insert>
+    <select id="selectById" parameterType="long" resultMap="employeesResultMap">
+                select emp_no,
+                       birth_date,
+                       first_name,
+                       last_name,
+                       gender,
+                       hire_date
+                from employees
+                where emp_no = #{id}
+    </select>
+    <select id="selectByLimit" resultMap="employeesResultMap">
+        select emp_no,
+        birth_date,
+        first_name,
+        last_name,
+        gender,
+        hire_date
+        from employees
+        <where>
+<!--            <if test="ety.employeeNo != null">AND emp_no=#{ety.employeeNo}</if>-->
+            <if test="ety.firstName != null and ety.firstName !=''">AND first_name=#{ety.firstName}</if>
+            <if test="ety.lastName != null and ety.lastName !=''">AND last_name=#{ety.lastName}</if>
+        </where>
+        <if test="limit == null">order by emp_no asc</if>
+        <if test="limit != null">
+            <if test="limit.sort == null"> order by emp_no asc</if>
+            <if test="limit.sort != null"> order by ${limit.sort} ${limit.dir}</if>
+            <if test="limit.limit != null"> limit ${limit.start}, ${limit.limit}</if>
+        </if>
+    </select>
+</mapper>
