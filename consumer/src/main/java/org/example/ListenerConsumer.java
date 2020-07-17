@@ -2,6 +2,7 @@ package org.example;
 
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.TimeoutException;
 import org.example.model.Employee;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +42,10 @@ public class ListenerConsumer<K, V> implements Runnable {
                 }
                 try {
                     kafkaConsumer.commitSync();
+                    throw new TimeoutException("fake timeout");
                 } catch (Exception ex) {
-                    logger.warn(ex.getMessage());
-                    ex.printStackTrace();
-                    Thread.currentThread().getStackTrace();
+                    logger.error("Consumer exception", ex);
+                    break;
                 }
             }
         } finally {
@@ -64,13 +65,15 @@ public class ListenerConsumer<K, V> implements Runnable {
 
         @Override
         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-
+            for (TopicPartition partition : partitions) {
+                logger.info(partition.toString());
+            }
+            consumer.commitSync(currentOffset);
         }
 
         @Override
         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
             logger.info("onPartitionsAssigned: " + partitions.toString());
-
             for (TopicPartition topicPartition : partitions) {
                 OffsetAndMetadata offset = ListenerConsumer.this.currentOffset.get(topicPartition);
                 if (offset != null) {
